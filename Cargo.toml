@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Changing to 0.9 breaks the dependency chain to serde completely
 bootloader = "0.9"
+x86_64 = "0.14"
 
 [profile.dev]
 panic = "abort"
