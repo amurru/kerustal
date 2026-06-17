@@ -1,0 +1,17 @@
+[package]
+name = "kerustal"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Changing to 0.9 breaks the dependency chain to serde completely
+bootloader = "0.9"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[package.metadata.bootimage]
+run-command = ["qemu-system-x86_64", "-drive", "format=raw,file={}"]
