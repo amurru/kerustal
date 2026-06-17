@@ -3,6 +3,7 @@
 
 use bootloader::entry_point;
 use core::panic::PanicInfo;
+use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
 use x86_64::instructions::port::Port;
 
 // Import out new vga_buffer module
@@ -17,6 +18,14 @@ fn kernel_main(_boot_info: &'static bootloader::BootInfo) -> ! {
     // Create ports mapped to the keyboard controller registers
     let mut status_port = Port::<u8>::new(0x64);
     let mut data_port = Port::<u8>::new(0x60);
+
+    // Initialize the layout state engine
+    let mut keyboard = Keyboard::new(
+        ScancodeSet1::new(),
+        layouts::Us104Key,
+        HandleControl::Ignore,
+    );
+
     loop {
         unsafe {
             // Read the status register
@@ -27,10 +36,17 @@ fn kernel_main(_boot_info: &'static bootloader::BootInfo) -> ! {
                 // Read the actual scancode from the data register
                 let scancode = data_port.read();
 
-                // For now, let's just print the raw hardware number!
-                // NOTE: Scancodes below 0x80 mean a key was pressed, above 0x80 means released.
-                if scancode < 0x80 {
-                    print!("[Key:{:#X}]", scancode);
+                // Pass the raw byte to the decoder engine
+                if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
+                    // Translate the physical event into a logical keypress
+                    if let Some(key) = keyboard.process_keyevent(key_event) {
+                        match key {
+                            // Normal character keys (handles lower/upper cases automatically)
+                            DecodedKey::Unicode(character) => print!("{}", character),
+                            // Function keys, arrow keys, etc.
+                            DecodedKey::RawKey(key) => print!("{:?}", key),
+                        }
+                    }
                 }
             }
         }

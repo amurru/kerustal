@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 bootloader = "0.9"
 x86_64 = "0.14"
+pc-keyboard = "0.7.0"
 
 [profile.dev]
 panic = "abort"
